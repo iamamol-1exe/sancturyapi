@@ -13,6 +13,8 @@ import cors from "cors";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { config } from "./config";
 import authService from "./modules/auth/auth.service";
+import { RedisStore } from "connect-redis";
+import redisClient from "./infra/redis";
 
 const app: Express = express();
 
@@ -26,14 +28,28 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(helmet());
+app.use(cookieParser());
 
 app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 
 app.use(morgan("dev"));
 
+app.use((req, res, next) => {
+  if (["POST", "PUT", "PATCH"].includes(req.method)) {
+    express.json({ limit: "10mb" })(req, res, next);
+  } else {
+    next();
+  }
+});
+
 app.use(
   session({
     secret: config.base.secret,
+    store: new RedisStore({
+      client: redisClient,
+      prefix: "sees:",
+      ttl: 7 * 24 * 60 * 60,
+    }),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -55,36 +71,6 @@ passport.serializeUser((user: any, done) => {
 passport.deserializeUser((user: any, done) => {
   done(null, user as any);
 });
-
-const googleVerify: any = async (
-  _issuer: any,
-  profile: any,
-  _context: any,
-  _idToken: any,
-  accessToken: string,
-  refreshToken: string,
-  params: any,
-  done: any,
-) => {
-  try {
-    console.log("profile from google", profile);
-    const email = profile?.emails?.[0]?.value ?? null;
-    const displayName = profile?.displayName ?? null;
-    const user = await authService.upsertOAuthUser({
-      provider: "google",
-      providerAccountId: profile?.id,
-      email,
-      displayName,
-      accessToken,
-      refreshToken,
-      expiresIn: params?.expires_in ?? null,
-    });
-
-    return done(null, user);
-  } catch (error) {
-    return done(error);
-  }
-};
 
 passport.use(
   new GoogleStrategy(
@@ -119,7 +105,6 @@ app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
   res.status(500).json({ message: "Something went wrong" });
 });
-app.use(cookieParser());
 
 const port = process.env.PORT || 4001;
 

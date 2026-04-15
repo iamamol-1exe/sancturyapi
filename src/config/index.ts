@@ -26,4 +26,7 @@ export const config = {
       process.env.CALLBACK ??
       "http://localhost:4001/api/v1/auth/google/callback",
   },
+  redis: {
+    url: process.env.REDIS_URL || "redis://localhost:6379",
+  },
 };
