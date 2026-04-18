@@ -127,7 +127,7 @@ app.use((err: any, req: any, res: any, next: any) => {
   res.status(500).json({ message: "Something went wrong" });
 });
 
-const port = process.env.PORT || 4001;
+
 
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
 

@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import bcrypt from "bcrypt";
 import { sequelize } from "../../infra/db/postgres";
 import { Oauth } from "../../infra/models/oauth.model";
 import { User } from "../../infra/models/user.model";
@@ -61,13 +61,13 @@ class AuthService {
           payload.providerAccountId,
           transaction,
         );
-
+        const passwordHash = await this.generateHash(email);
         user = await User.create(
           {
             email,
             name: payload.displayName ?? username,
             username,
-            passwordHash: "1234556",
+            passwordHash: passwordHash,
           },
           { transaction },
         );
@@ -123,6 +123,14 @@ class AuthService {
     }
 
     return `${candidate}_${Date.now()}`;
+  }
+
+  public async generateHash(email: string): Promise<string> {
+    const hashedPassword = await bcrypt.hash(email, 10);
+    return hashedPassword;
+  }
+  public async comparePassword(password: string, hashedPassword: string) {
+    return await bcrypt.compare(password, hashedPassword);
   }
 }
 
