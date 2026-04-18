@@ -22,22 +22,27 @@
   "license": "ISC",
   "devDependencies": {
     "@types/compression": "^1.8.1",
+    "@types/connect-redis": "^0.0.23",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.6.0",
     "@types/passport-google-oidc": "^0.1.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express-session": "^1.18.2",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "@types/socket.io": "^3.0.1",
     "nodemon": "^3.1.14",
     "sequelize-cli": "^6.6.5",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express-session": "^1.18.2",
-    "@types/passport": "^1.0.17",
-    "@types/passport-google-oauth20": "^2.0.17",
+    "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
+    "connect-redis": "^9.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -45,12 +50,15 @@
     "express-rate-limit": "^8.3.2",
     "express-session": "^1.19.0",
     "helmet": "^8.1.0",
+    "ioredis": "^5.10.1",
     "morgan": "^1.10.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-google-oidc": "^0.1.0",
     "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.8"
+    "redis": "^5.12.1",
+    "sequelize": "^6.37.8",
+    "socket.io": "^4.8.3"
   }
 }

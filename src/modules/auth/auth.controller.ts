@@ -2,7 +2,11 @@ import { NextFunction, Request, Response } from "express";
 
 class AuthController {
   oauthCallback(req: Request, res: Response) {
-    return res.status(200).json({ user: req.user ?? null });
+    req.session.regenerate((err) => {
+      if (err) return res.status(500).json({ message: "Session error" });
+      (req.session as any).passport = { user: req.user };
+      return res.redirect("http://localhost:3000/dashboard");
+    });
   }
 
   oauthFailed(_req: Request, res: Response) {
