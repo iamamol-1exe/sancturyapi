@@ -15,6 +15,7 @@ import { config } from "./config";
 import authService from "./modules/auth/auth.service";
 import { RedisStore } from "connect-redis";
 import redisClient from "./infra/redis";
+import { User } from "./infra/models/user.model";
 
 const app: Express = express();
 
@@ -42,34 +43,56 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(
-  session({
-    secret: config.base.secret,
-    store: new RedisStore({
-      client: redisClient,
-      prefix: "sees:",
-      ttl: 7 * 24 * 60 * 60,
-    }),
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: config.base.enviroment === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    },
+export const Session = session({
+  secret: config.base.secret,
+  store: new RedisStore({
+    client: redisClient,
+    prefix: "sees:",
+    ttl: 7 * 24 * 60 * 60,
   }),
-);
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: config.base.enviroment === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
+});
+app.use(Session);
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 passport.serializeUser((user: any, done) => {
-  done(null, user);
+  done(null, user?.id);
 });
 
-passport.deserializeUser((user: any, done) => {
-  done(null, user as any);
+passport.deserializeUser(async (id: unknown, done) => {
+  try {
+    let resolvedId: string | number | undefined;
+
+    if (typeof id === "string" || typeof id === "number") {
+      resolvedId = id;
+    } else if (typeof id === "object" && id !== null) {
+      const obj = id as Record<string, unknown>;
+      const raw = obj.id ?? obj.userId;
+      if (typeof raw === "string" || typeof raw === "number") {
+        resolvedId = raw;
+      }
+    }
+
+    if (resolvedId === undefined) {
+      return done(null, false);
+    }
+
+    const user = await User.findByPk(resolvedId, {
+      attributes: { exclude: ["passwordHash"] },
+    });
+    return done(null, user ?? false);
+  } catch (error) {
+    return done(error as Error);
+  }
 });
 
 passport.use(
@@ -81,8 +104,6 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        console.log("ACCESS:", profile);
-
         const user = await authService.upsertOAuthUser({
           provider: "google",
           providerAccountId: profile.id,

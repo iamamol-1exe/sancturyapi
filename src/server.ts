@@ -4,8 +4,10 @@ import { sequelize } from "./infra/db/postgres";
 import { config } from "./config";
 import "./infra/models";
 import redisClient from "./infra/redis";
+import { bindSocket } from "./infra/socket";
 
 const httpServer = http.createServer(app);
+bindSocket(httpServer);
 let isShuttingDown = false;
 
 const shutdown = async (signal: string) => {
